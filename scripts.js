@@ -1,48 +1,73 @@
 let saveCount = 0;
 let alertDismissCount = 0;
-let countdownTime; 
+
+window.alert = function(message) {
+};
 
 function customAlert(message) {
     setTimeout(function() {
+
+        if (message.includes("Yêu cầu của bạn đã được chấp nhận")) {
+            console.log(message);
+            return;
+        } else {
+            console.log(message);
+            submitForm(); 
+        }
+
         alertDismissCount++;
-        console.log("Alert dismissed: " + alertDismissCount + " times");
     }, 1000);
 }
 
-function Save() {
-        countdownTime = 5;
-        const countdownInterval = setInterval(function() {
+function submitForm(event) {
+
+    const form = document.getElementById("aspnetForm");
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.text())
+    .then(text => {
+        saveCount++;
+        console.log("Save Count: " + saveCount);
+
+        // if (text.includes("Yêu cầu của bạn đã được chấp nhận")) {
+        //     customAlert("Yêu cầu của bạn đã được chấp nhận");
+        // } else {
+        //     customAlert("Not yet");
+        // }
+
+        if (event) {
+            event.preventDefault();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function manageSubmission() {
+    let countdownTime = 3;
+    const countdownInterval = setInterval(function() {
         console.log(`Tự động đổi lớp trong ${countdownTime} giây...`);
         countdownTime--;
         if (countdownTime < 0) {
             clearInterval(countdownInterval);
-            autoSave()
+            pressSaveButton();
         }
     }, 1000);
 }
 
-function autoSave() {
-            document.getElementById("ctl00_mainContent_btSave").addEventListener("click", function(event) {
-                event.preventDefault(); // Ngăn tải lại trang hoặc điều hướng
-            });
-
-            document.getElementById("ctl00_mainContent_btSave").click();
-            saveCount++; // Increment save counter
-            console.log("Count: " + saveCount + " times");
-
-            // Kiểm tra tiến trình
-            const successElement = document.getElementById("successMessageId");
-            const successMessage = "Đổi lớp thành công !!"; 
-
-            const intervalId = setInterval(function() {
-                if (successElement && successElement.innerText.includes(successMessage)) {
-                    customAlert(successMessage);
-                    clearInterval(intervalId); // Dừng check
-                }
-            }, 1000); 
-
-            // Gọi lại hàm autoSave sau khi hoàn thành để lặp lại
-            setTimeout(autoSave, 5000);
+function pressSaveButton() {
+    const saveButton = document.getElementById("ctl00_mainContent_btSave");
+    if (saveButton) {
+        saveButton.addEventListener("click", function(event) {
+            submitForm(event);
+        });
+        saveButton.click(); 
+    } else {
+        console.error("Save button not found");
+    }
 }
 
-Save();
+manageSubmission();
