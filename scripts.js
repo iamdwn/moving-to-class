@@ -1,14 +1,37 @@
-    function autoSave() {
-        //click Save
-        document.getElementById("ctl00_mainContent_btSave").click();
 
-        //kiểm tra thành công
-        const intervalId = setInterval(function() {
-            if (successElement && successElement.innerText.includes(successMessage)) {
-                console.log("Đổi lớp thành công !!");
-                clearInterval(intervalId);
-            }
-        }, 1000); 
-    }
+function autoSave() {
+    let countdownTime = 5; // Set countdown
 
-    autoSave();
+    const countdownInterval = setInterval(function() {
+        console.log(`Auto-saving in ${countdownTime} seconds...`);
+        countdownTime--;
+
+        if (countdownTime < 0) {
+            clearInterval(countdownInterval);
+
+            // Click Save
+            document.getElementById("ctl00_mainContent_btSave").click();
+
+            // Kiểm tra
+            const successElement = document.getElementById("successMessageId");
+            const successMessage = "Đổi lớp thành công !!";
+
+            const intervalId = setInterval(function() {
+                if (successElement && successElement.innerText.includes(successMessage)) {
+                    alert("Save successful! Stopping further execution.");
+                    clearInterval(intervalId); // Dừng
+                }
+            }, 1000); 
+        }
+    }, 1000);
+}
+autoSave();
+
+window.alert = function(message) {
+    console.log("Alert triggered: " + message);
+    setTimeout(function() {
+        console.log("Alert auto-closed (simulating OK press)");
+    }, 1000);
+};
+
+alert("Test Alert");
