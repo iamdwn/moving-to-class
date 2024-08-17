@@ -3,7 +3,7 @@ function autoSave() {
     let countdownTime = 5; // Set countdown
 
     const countdownInterval = setInterval(function() {
-        console.log(`Auto-saving in ${countdownTime} seconds...`);
+        console.log(`Tự động đổi lớp trong ${countdownTime} giây...`);
         countdownTime--;
 
         if (countdownTime < 0) {
@@ -18,7 +18,7 @@ function autoSave() {
 
             const intervalId = setInterval(function() {
                 if (successElement && successElement.innerText.includes(successMessage)) {
-                    alert("Save successful! Stopping further execution.");
+                    alert(successMessage);
                     clearInterval(intervalId); // Dừng
                 }
             }, 1000); 
@@ -33,5 +33,3 @@ window.alert = function(message) {
         console.log("Alert auto-closed (simulating OK press)");
     }, 1000);
 };
-
-alert("Test Alert");
