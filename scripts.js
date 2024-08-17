@@ -24,6 +24,10 @@ function submitForm(event) {
     const form = document.getElementById("aspnetForm");
     const formData = new FormData(form);
 
+    // if (event) {
+    //     event.preventDefault();
+    // }
+
     fetch(form.action, {
         method: 'POST',
         body: formData,
@@ -38,10 +42,6 @@ function submitForm(event) {
         // } else {
         //     customAlert("Not yet");
         // }
-
-        if (event) {
-            event.preventDefault();
-        }
     })
     .catch(error => console.error('Error:', error));
 }
@@ -59,9 +59,15 @@ function manageSubmission() {
 }
 
 function pressSaveButton() {
+    const form = document.getElementById("aspnetForm");
+    const formData = new FormData(form);
     const saveButton = document.getElementById("ctl00_mainContent_btSave");
     if (saveButton) {
         saveButton.addEventListener("click", function(event) {
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+            })
             submitForm(event);
         });
         saveButton.click(); 
