@@ -39,7 +39,7 @@ ipcMain.on('get-emails', (event) => {
     event.reply('email-list', emails);
 });
 
-ipcMain.on('start-chrome', async (event, { email, password }) => {
+ipcMain.on('start-chrome', async (event, { email, password, subject, course }) => {
     const userDataDirMap = {
         'duongtddse172132@fpt.edu.vn': 'C:\\chrome-profiles\\user1',
         'anhptnse171173@fpt.edu.vn': 'C:\\chrome-profiles\\user2',
@@ -77,7 +77,7 @@ ipcMain.on('start-chrome', async (event, { email, password }) => {
             await page.click('#ctl00_mainContent_btnLogin');
             console.log('Signed Google.');
 
-            //Check xem coi co ton tai san profile user chua
+            //Check xem coi co ton tai profile user chua
             if (!fs.existsSync(userDataDir)) {
                 console.log('Profile not found. Proceeding with login.');
 
@@ -91,11 +91,124 @@ ipcMain.on('start-chrome', async (event, { email, password }) => {
                 console.log('Signing ...');
 
                 await page.waitForNavigation({ waitUntil: 'networkidle0' });
-                console.log('Signed successfully.');
-            } else {
-                console.log('Profile found. Skipping login process.');
-                await page.waitForNavigation({ waitUntil: 'networkidle0' });
+                console.log('Signed successfully.');         
+            } 
+            // else {
+            //     console.log('Profile found. Skipping login process.');
+            //     await page.waitForNavigation({ waitUntil: 'networkidle0' });
+            // }
+
+            await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]');
+            console.log('Redirecting ...');
+            await page.click('a[href="FrontOffice/Courses.aspx"]');
+            console.log('Redirected successfully.');
+
+            console.log(`Redirecting ${subject} ...`);
+
+            const rows = await page.$$('table tr');
+
+            for (const row of rows) {
+                const columns = await row.$$('td');
+                if (columns.length > 1) {
+                    const subjectText = await page.evaluate(el => el.textContent.trim(), columns[1]);
+                    if (subject.includes(subjectText)) {
+                        const moveLink = await row.$('a[title="Xin chuyen mon hoc nay sang lop khac"]');
+                        if (moveLink) {
+                            await moveLink.click();
+                            console.log(`Redirected ${subject}`);
+                            break;
+                        }
+                    }
+                }
             }
+
+            await page.waitForSelector('#ctl00_mainContent_dllCourse');
+            console.log(`Selecting course code: ${course} ...`);
+            await page.select('#ctl00_mainContent_dllCourse', course);
+            console.log(`Selected course code: ${course}`);
+
+            // const saveButton = await page.$('input[value="Save"]');
+            // if (saveButton) {
+            //     console.log("Moving ...");
+            //     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout reached, exiting program.")), 3000));
+        
+            //     try {
+            //         await Promise.race([
+            //             saveButton.click(),
+            //             timeout
+            //         ]);
+            //     } catch (error) {
+            //         console.error(error.message);
+            //         await browser.close();
+            //         process.exit(1);  
+            //     }
+            // } else {
+            //     console.error("Error save");
+            //     await browser.close();
+            //     process.exit(1);  
+            // }
+        
+            // console.log("Moving out class");
+
+            // page.on('dialog', async (dialog) => {
+            //     const message = dialog.message();
+            //     console.log(`Alert: ${message}`);
+        
+            //     if (message.includes('Bạn không thể chuyển tới lớp này')) {
+            //         console.log('Failed.\n==========================');
+            //         await dialog.accept(); 
+        
+            //         await new Promise(resolve => setTimeout(resolve, 1000)); 
+        
+            //         const saveButton = await page.$('input[value="Save"]');
+            //         if (saveButton) {
+            //             console.log("Retrying ...");
+        
+            //             const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout reached, exiting program.")), 3000));
+        
+            //             try {
+            //                 await Promise.race([
+            //                     saveButton.click(),
+            //                     timeout
+            //                 ]);
+            //             } catch (error) {
+            //                 console.error(error.message);
+            //                 await browser.close();
+            //                 process.exit(1);  
+            //             }
+            //         }
+            //     } else {
+            //         console.log('Successfully.\nClosing ...');
+            //         await dialog.accept();
+            //         await browser.close();
+            //         process.exit(0); 
+            //     }
+            // });
+
+            // await page.waitForSelector('table#ctl00_mainContent_gvCourses');
+
+            // const rows = await page.$$('#ctl00_mainContent_gvCourses tr');
+
+            // console.log('Redirecting ...');
+
+            // for (let row of rows) {
+            //     const subjectCodeCell = await row.$('td:first-child');
+            //     if (subjectCodeCell) {
+            //         const subjectCodeText = await page.evaluate(el => el.innerText.trim(), subjectCodeCell);
+            //         if (subjectCodeText === subjectCode) { 
+            //             console.log(`Found subject code ${subjectCode}.`);
+
+            //             const moveClassLink = await row.$('a#ctl00_mainContent_gvCourses_ctl02_lkMoveGroup');
+            //             if (moveClassLink) {
+            //                 await moveClassLink.click();
+            //                 console.log('Redirected.');
+            //                 break;
+            //             }
+            //         } else {
+            //             console.log(`Not found subject code ${subjectCode}.`);
+            //         }
+            //     }
+            // }
         } catch (error) {
             console.error('Error during automation:', error.message);
         }
