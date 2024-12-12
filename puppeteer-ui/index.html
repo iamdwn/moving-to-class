@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving to class by Dozun v1.2</title>
+    <title>Moving to class by Dozun v1.5</title>
     <style>
         * {
             box-sizing: border-box;
@@ -87,7 +87,7 @@
 <body>
     <div class="phone-frame">
         <div class="form-container">
-            <h1>Login to FPT</h1>
+            <h1>Moving to class by Dozun v1.5</h1>
             <select id="email">
                 <option value="" disabled selected>Choose your email</option>
             </select>
@@ -159,6 +159,8 @@
         const subjectDropdown = document.getElementById('subject-dropdown');
         const courseCodeDropdown = document.getElementById('course-code');
         
+        let isRunning = false;
+
         const userProfileMap = {
             'duongtddse172132@fpt.edu.vn': 'C:\\chrome-profiles\\user1',
             'anhptnse171173@fpt.edu.vn': 'C:\\chrome-profiles\\user2',
@@ -189,37 +191,45 @@
         }
 
         toggleButton.addEventListener('click', () => {
-            const email = emailSelect.value;
-            const password = passwordInput.value;
-            const subject = subjectDropdown.value;
-            const course = courseCodeDropdown.value;
-
-            if (!course) {
-                console.error('Course code is undefined or not provided!');
-                return;
-            }
-
-            if (!email || !subject) {
-                statusDiv.textContent = 'Please select email and enter subject code!';
+            if (isRunning) {
+                ipcRenderer.send('stop-chrome');
+                statusDiv.textContent = 'Program is stopped.';
                 statusDiv.style.color = 'red';
-                return;
-            }
+                toggleButton.style.backgroundColor = 'green';
+                toggleButton.textContent = 'Start';
+                isRunning = false;
+            } else {
+                const email = emailSelect.value;
+                const password = passwordInput.value;
+                const subject = subjectDropdown.value;
+                const course = courseCodeDropdown.value;
 
-            if (passwordInput.style.display === 'block' && !password) {
-                statusDiv.textContent = 'Please enter your password!';
-                statusDiv.style.color = 'red';
-                return;
-            }
+                if (!course) {
+                    console.error('Course code is undefined or not provided!');
+                    return;
+                }
 
-            ipcRenderer.send('start-chrome', { email, password, subject, course });
-            statusDiv.textContent = 'Attempting to log in...';
-            statusDiv.style.color = 'blue';
+                if (!email || !subject) {
+                    statusDiv.textContent = 'Please select email and enter subject code!';
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+
+                if (passwordInput.style.display === 'block' && !password) {
+                    statusDiv.textContent = 'Please enter your password!';
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+
+                ipcRenderer.send('start-chrome', { email, password, subject, course });
+                statusDiv.textContent = 'Attempting to log in...';
+                statusDiv.style.color = 'blue';
+                toggleButton.style.backgroundColor = 'red';
+                toggleButton.textContent = 'Stop';
+                isRunning = true;
+            }
         });
 
-        ipcRenderer.on('chrome-stopped', () => {
-            statusDiv.textContent = 'Program is stopped.';
-            statusDiv.style.color = 'red';
-        });
     </script>
 </body>
 </html>

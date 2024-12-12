@@ -6,6 +6,16 @@ const fs = require('fs');
 
 let mainWindow;
 let chromeProcess;
+let browser = null;
+
+exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
+    console.log('Clearing ...');
+    if (err) {
+        console.error('Error clearing Chrome:', err);
+    } else {
+        console.log('Cleared successfully.');
+    }
+});
 
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
@@ -58,13 +68,16 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
     });
 
     setTimeout(async () => {
-        const browser = await puppeteer.connect({
-            browserURL: 'http://localhost:9222',
-        });
-
         try {
-            const pages = await browser.pages();
-            const page = pages[0];
+            const browser = await puppeteer.connect({
+                browserURL: 'http://localhost:9222',
+                headless: false,
+            });
+
+            // const pages = await browser.pages();
+            // const page = pages[0];
+
+            const page = await browser.newPage();
 
             await page.goto('https://fap.fpt.edu.vn/Default.aspx');
 
@@ -78,7 +91,6 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
             await page.click('#ctl00_mainContent_btnLogin');
             console.log('Signed Google.');
 
-            //Check xem coi co ton tai profile user chua
             if (!fs.existsSync(userDataDir)) {
                 console.log('Profile not found. Proceeding with login.');
 
@@ -194,6 +206,14 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
 
 ipcMain.on('stop-chrome', () => {
     if (chromeProcess) {
+        console.log("Stopping ...");
+        exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
+            if (err) {
+                console.error('Error stopping Chrome:', err);
+            } else {
+                console.log('Stopped successfully.');
+            }
+        });
         chromeProcess.kill();
         chromeProcess = null;
     }
