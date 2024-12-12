@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving to class by Dozun v1.5</title>
+    <title>Moving to class by Dozun v0.9</title>
     <style>
         * {
             box-sizing: border-box;
@@ -20,7 +20,7 @@
         }
 
         .phone-frame {
-            width: 375px;
+            width: 420px;
             height: 812px;
             background-color: white;
             border-radius: 20px;
@@ -82,12 +82,28 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+
+        #console-output {
+            width: 100%;
+            height: 100%;
+            font-size: 10px;
+            background-color: #1e1e1e;
+            color: white;
+            overflow-y: auto;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: left; 
+            margin-top: 20px;
+        }
+
     </style>
 </head>
 <body>
     <div class="phone-frame">
         <div class="form-container">
-            <h1>Moving to class by Dozun v1.5</h1>
+            <h1>Moving to class by Dozun v0.9</h1>
             <select id="email">
                 <option value="" disabled selected>Choose your email</option>
             </select>
@@ -146,6 +162,7 @@
 
             <button id="toggle-button">Start</button>
             <div id="status" class="status"></div>
+            <div id="console-output" class="status"></div>
         </div>
     </div>
 
@@ -158,7 +175,8 @@
         const statusDiv = document.getElementById('status');
         const subjectDropdown = document.getElementById('subject-dropdown');
         const courseCodeDropdown = document.getElementById('course-code');
-        
+        const consoleOutput = document.getElementById('console-output');
+
         let isRunning = false;
 
         const userProfileMap = {
@@ -228,6 +246,11 @@
                 toggleButton.textContent = 'Stop';
                 isRunning = true;
             }
+        });
+
+        ipcRenderer.on('console-log', (event, message) => {
+            consoleOutput.innerHTML += `<pre>${message}</pre>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
         });
 
     </script>

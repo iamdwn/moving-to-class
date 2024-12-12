@@ -19,8 +19,8 @@ exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
 
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
-        width: 375,
-        height: 812,
+        width: 450,
+        height: 900,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
@@ -30,6 +30,12 @@ app.on('ready', () => {
     });
 
     mainWindow.loadFile('index.html');
+
+    const log = console.log;
+    console.log = (...args) => {
+        log(...args);
+        mainWindow.webContents.send('console-log', args.join(' '));
+    };
 
     mainWindow.on('closed', () => {
         if (chromeProcess) {
