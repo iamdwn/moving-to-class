@@ -1,17 +1,31 @@
 {
   "name": "puppeteer-ui",
   "version": "1.0.0",
-  "description": "",
+  "description": "This app is used to support moving to other class.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron": "^33.2.1",
     "puppeteer-core": "^23.10.3"
+  },
+  "build": {
+    "appId": "dozun.electron.moving-to-class",
+    "productName": "Moving To Class by Dozun v0.9",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.1"
   }
 }
