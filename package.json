@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "puppeteer": "^23.10.4"
+  },
+  "devDependencies": {
+    "electron-builder": "^25.1.8"
   }
 }
