@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppeteer Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .form-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+        }
+
+        select, input, button {
+            padding: 12px;
+            margin: 5px 0;
+            width: 100%;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        select:focus, input:focus {
+            border-color: #4caf50;
+            outline: none;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="form-container">
+            <h1>Login to FPT</h1>
+            <select id="email">
+                <option value="" disabled selected>Choose your email</option>
+            </select>
+
+            <input type="password" id="password" placeholder="Enter your password" />
+
+            <button id="toggle-button">Start</button>
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const toggleButton = document.getElementById('toggle-button');
+        const emailSelect = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const statusDiv = document.getElementById('status');
+
+        const userProfileMap = {
+            'duongtddse172132@fpt.edu.vn': 'C:\\chrome-profiles\\user1',
+            'anhptnse171173@fpt.edu.vn': 'C:\\chrome-profiles\\user2',
+        };
+
+        ipcRenderer.send('get-emails');
+        ipcRenderer.on('email-list', (event, emails) => {
+            emails.forEach(email => {
+                const option = document.createElement('option');
+                option.value = email;
+                option.textContent = email;
+                emailSelect.appendChild(option);
+            });
+        });
+
+        emailSelect.addEventListener('change', () => {
+            const selectedEmail = emailSelect.value;
+            
+            if (userProfileMap[selectedEmail]) {
+                passwordInput.style.display = 'none';
+            } else {
+                passwordInput.style.display = 'block';
+            }
+        });
+
+        if (!emailSelect.value) {
+            passwordInput.style.display = 'block';
+        }
+
+        toggleButton.addEventListener('click', () => {
+            const email = emailSelect.value;
+            const password = passwordInput.value;
+
+            if (!email) {
+                statusDiv.textContent = 'Please select an email!';
+                statusDiv.style.color = 'red';
+                return;
+            }
+
+            if (passwordInput.style.display === 'block' && !password) {
+                statusDiv.textContent = 'Please enter your password!';
+                statusDiv.style.color = 'red';
+                return;
+            }
+
+            ipcRenderer.send('start-chrome', { email, password });
+            statusDiv.textContent = 'Attempting to log in...';
+            statusDiv.style.color = 'blue';
+        });
+
+        ipcRenderer.on('chrome-stopped', () => {
+            statusDiv.textContent = 'Chrome process stopped.';
+            statusDiv.style.color = 'red';
+        });
+    </script>
+</body>
+</html>
