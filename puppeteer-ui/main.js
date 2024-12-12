@@ -63,7 +63,8 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
         });
 
         try {
-            const page = await browser.newPage();
+            const pages = await browser.pages();
+            const page = pages[0];
 
             await page.goto('https://fap.fpt.edu.vn/Default.aspx');
 
@@ -115,7 +116,7 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
                         const moveLink = await row.$('a[title="Xin chuyen mon hoc nay sang lop khac"]');
                         if (moveLink) {
                             await moveLink.click();
-                            console.log(`Redirected ${subject}`);
+                            console.log(`Redirected ${subject} successfully.`);
                             break;
                         }
                     }
@@ -123,67 +124,43 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
             }
 
             await page.waitForSelector('#ctl00_mainContent_dllCourse');
-            console.log(`Selecting course code: ${course} ...`);
+            console.log(`Selecting course to move ...`);
             await page.select('#ctl00_mainContent_dllCourse', course);
-            console.log(`Selected course code: ${course}`);
+            console.log(`Selected course to move successfully.`);
 
-            // const saveButton = await page.$('input[value="Save"]');
-            // if (saveButton) {
-            //     console.log("Moving ...");
-            //     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout reached, exiting program.")), 3000));
-        
-            //     try {
-            //         await Promise.race([
-            //             saveButton.click(),
-            //             timeout
-            //         ]);
-            //     } catch (error) {
-            //         console.error(error.message);
-            //         await browser.close();
-            //         process.exit(1);  
-            //     }
-            // } else {
-            //     console.error("Error save");
-            //     await browser.close();
-            //     process.exit(1);  
-            // }
-        
-            // console.log("Moving out class");
+            await page.waitForSelector('#ctl00_mainContent_btSave', { visible: true });
+            console.log('Saving ...');
 
-            // page.on('dialog', async (dialog) => {
-            //     const message = dialog.message();
-            //     console.log(`Alert: ${message}`);
-        
-            //     if (message.includes('Bạn không thể chuyển tới lớp này')) {
-            //         console.log('Failed.\n==========================');
-            //         await dialog.accept(); 
-        
-            //         await new Promise(resolve => setTimeout(resolve, 1000)); 
-        
-            //         const saveButton = await page.$('input[value="Save"]');
-            //         if (saveButton) {
-            //             console.log("Retrying ...");
-        
-            //             const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout reached, exiting program.")), 3000));
-        
-            //             try {
-            //                 await Promise.race([
-            //                     saveButton.click(),
-            //                     timeout
-            //                 ]);
-            //             } catch (error) {
-            //                 console.error(error.message);
-            //                 await browser.close();
-            //                 process.exit(1);  
-            //             }
-            //         }
-            //     } else {
-            //         console.log('Successfully.\nClosing ...');
-            //         await dialog.accept();
-            //         await browser.close();
-            //         process.exit(0); 
-            //     }
-            // });
+            page.on('dialog', async (dialog) => {
+                const message = dialog.message();
+                console.log(`Alert: ${message}`);
+
+                if (message.includes('Bạn không thể chuyển tới lớp này')) {
+                    console.log('Failed to move class. Accepting alert.');
+                    await dialog.accept();
+
+                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    
+                    const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
+                    if (saveButton) {
+                        console.log("Retrying Save button...");
+                        await saveButton.click();
+                    } else {
+                        console.error("Save button not found!");
+                    }
+                } else {
+                    console.log('No failure. Accepting alert.');
+                    await dialog.accept();
+                }
+            });
+
+            const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
+            if (saveButton) {
+                console.log("Clicking Save button...");
+                await saveButton.click();
+            } else {
+                console.error("Save button not found!");
+            }
 
             // await page.waitForSelector('table#ctl00_mainContent_gvCourses');
 
