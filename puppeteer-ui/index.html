@@ -20,7 +20,7 @@
         }
 
         .phone-frame {
-            width: 420px;
+            width: 500px;
             height: 812px;
             background-color: white;
             border-radius: 20px;
@@ -228,8 +228,10 @@
                 }
 
                 if (!email || !subject) {
+                    console.log(statusDiv);
                     statusDiv.textContent = 'Please select email and enter subject code!';
                     statusDiv.style.color = 'red';
+                    console.log(statusDiv);
                     return;
                 }
 
@@ -240,7 +242,7 @@
                 }
 
                 ipcRenderer.send('start-chrome', { email, password, subject, course });
-                statusDiv.textContent = 'Attempting to log in...';
+                statusDiv.textContent = 'Attempting to log in ...';
                 statusDiv.style.color = 'blue';
                 toggleButton.style.backgroundColor = 'red';
                 toggleButton.textContent = 'Stop';
@@ -248,11 +250,15 @@
             }
         });
 
-        ipcRenderer.on('console-log', (event, message) => {
+        ipcRenderer.on('console-log', (event, message, isCleared) => {
+            if (isCleared === true){
+                consoleOutput.innerHTML = ''; 
+            }
+
             consoleOutput.innerHTML += `<pre>${message}</pre>`;
+            
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
         });
-
     </script>
 </body>
 </html>

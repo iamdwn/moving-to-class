@@ -7,19 +7,19 @@ const fs = require('fs');
 let mainWindow;
 let chromeProcess;
 let browser = null;
+let isCleared = false;
 
 exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
-    console.log('Clearing ...');
-    if (err) {
-        console.error('Error clearing Chrome:', err);
-    } else {
+    try {
+        console.log('Clearing ...');
         console.log('Cleared successfully.');
+    } catch {
     }
 });
 
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
-        width: 450,
+        width: 550,
         height: 900,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -34,7 +34,7 @@ app.on('ready', () => {
     const log = console.log;
     console.log = (...args) => {
         log(...args);
-        mainWindow.webContents.send('console-log', args.join(' '));
+        mainWindow.webContents.send('console-log', args.join(' '), isCleared);
     };
 
     mainWindow.on('closed', () => {
@@ -149,23 +149,29 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
             await page.waitForSelector('#ctl00_mainContent_btSave', { visible: true });
             console.log('Saving ...');
 
+            let count = 0;
+
             page.on('dialog', async (dialog) => {
                 const message = dialog.message();
-                console.log(`Alert: ${message}`);
+                isCleared = true;
+                console.log(`Alert: ${message}` + `\nFailed. Retrying ...` + `\nCount: ${count}`);
 
                 if (message.includes('Bạn không thể chuyển tới lớp này')) {
-                    console.log('Failed to move class. Accepting alert.');
+                    // console.log('Failed. Retrying ...');
+                    // console.log(`Count: ${count}`);
+
                     await dialog.accept();
 
                     await new Promise(resolve => setTimeout(resolve, 1500)); 
                     
                     const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
                     if (saveButton) {
-                        console.log("Retrying Save button...");
+                        // console.log("Retrying ...");
                         await saveButton.click();
                     } else {
                         console.error("Save button not found!");
                     }
+                    count++;                  
                 } else {
                     console.log('No failure. Accepting alert.');
                     await dialog.accept();
@@ -174,7 +180,7 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
 
             const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
             if (saveButton) {
-                console.log("Clicking Save button...");
+                console.log("Moving ...");
                 await saveButton.click();
             } else {
                 console.error("Save button not found!");
@@ -212,12 +218,10 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
 
 ipcMain.on('stop-chrome', () => {
     if (chromeProcess) {
-        console.log("Stopping ...");
         exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
-            if (err) {
-                console.error('Error stopping Chrome:', err);
-            } else {
-                console.log('Stopped successfully.');
+            try {
+                console.log('Stopping ...' + '\nStopped successfully.');
+            } catch {
             }
         });
         chromeProcess.kill();
