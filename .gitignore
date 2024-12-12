@@ -1,23 +1,84 @@
-# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+# Dependency directories
+node_modules/
+jspm_packages/
 
-# Local History for Visual Studio Code
-.history/
+# Optional npm cache directory
+.npm
 
-# Built Visual Studio Code Extensions
-*.vsix
+# Optional yarn cache directory
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
+# Build and distribution directories
+dist/
+build/
+out/
+*.local
+electron-builder-output/
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Typescript
+*.tsbuildinfo
+
+# Debugging
+.vscode-launch.json
+.vscode-test/
+*.stackdump
+
+# Temporary files
+*.tmp
+*.temp
+*.pid
+*.pid.lock
+
+# Coverage reports
+coverage/
+
+# Cache directories
+.cache/
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.next/
+.sass-cache/
+
+# Electron-specific files
+/electron/dist/
+*.asar
+*.asar.unpacked/
+
+# Git LFS
+*.lfs
+
+# VS Code settings for debugging Electron
+.vscode-test/
+
+# Optional for npm link dependencies
+**/node_modules/**
+
+# Git files
+*.lock
+*.orig
+*.rej
