@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "dozun.electron.moving-to-class",
-    "productName": "Moving To Class by Dozun v0.9.1",
+    "productName": "Moving To Class by Dozun v0.9.2",
     "files": [
       "**/*"
     ],

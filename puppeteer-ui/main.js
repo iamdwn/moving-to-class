@@ -5,17 +5,18 @@ const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 
 let mainWindow;
-let chromeProcess;
 let browser = null;
 let isCleared = false;
+let chromeProcess = null;
+let chromePort = 9222;
 
-exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
-    try {
-        console.log('Clearing ...');
-        console.log('Cleared successfully.');
-    } catch {
-    }
-});
+// exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
+//     try {
+//         console.log('Clearing ...');
+//         console.log('Cleared successfully.');
+//     } catch {
+//     }
+// });
 
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
@@ -78,12 +79,33 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
             const browser = await puppeteer.connect({
                 browserURL: 'http://localhost:9222',
                 headless: false,
+                args: [
+                    '--remote-debugging-port=${chromePort}'
+                    // '--disable-background-timer-throttling', // Ngăn giảm tốc độ bộ đếm thời gian
+                    // '--disable-renderer-backgrounding', // Ngăn giảm hiệu suất của tab chạy nền
+                    // '--disable-backgrounding-occluded-windows', // Vẫn xử lý cửa sổ bị minimize
+                    // '--force-renderer-accessibility', // Buộc Chrome luôn hoạt động
+                ]
             });
 
             // const pages = await browser.pages();
             // const page = pages[0];
 
+            browserInstance = browser;
+
             const page = await browser.newPage();
+
+            await page.evaluateOnNewDocument(() => {
+                Object.defineProperty(document, 'visibilityState', {
+                    get: () => 'visible',
+                });
+                Object.defineProperty(document, 'hidden', {
+                    get: () => false,
+                });
+                document.addEventListener('visibilitychange', (event) => {
+                    console.log('Visibility changed:', document.visibilityState);
+                });
+            });
 
             await page.goto('https://fap.fpt.edu.vn/Default.aspx');
 
@@ -118,7 +140,7 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
             // }
 
             try {
-                await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]', { timeout: 5000 });
+                await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]', { timeout: 2000 });
                 console.log('Redirecting ...');
                 await page.click('a[href="FrontOffice/Courses.aspx"]');
                 console.log('Redirected successfully.');
@@ -236,14 +258,46 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
 });
 
 ipcMain.on('stop-chrome', () => {
-    if (chromeProcess) {
-        exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
-            try {
-                console.log('Stopping ...' + '\nStopped successfully.');
-            } catch {
-            }
-        });
-        chromeProcess.kill();
-        chromeProcess = null;
-    }
+    // if (chromeProcess) {
+    //     exec('taskkill /F /IM chrome.exe', (err, stdout, stderr) => {
+    //         try {
+    //             console.log('Stopping ...' + '\nStopped successfully.');
+    //         } catch {
+    //         }
+    //     });
+    //     chromeProcess.kill();
+    //     chromeProcess = null;
+    // }
+    stopChromeByPort(chromePort);
 });
+
+function stopChromeByPort(port) {
+    console.log(`Tìm và dừng Chrome trên cổng ${port}...`);
+    //find process with port using netstat and taskkill
+    exec(`netstat -ano | findstr :${port}`, (err, stdout, stderr) => {
+        if (err || !stdout) {
+            console.error(`Not found any process with ${port}.`);
+            return;
+        }
+
+        //get PID from netstat
+        const lines = stdout.split('\n').filter(line => line.includes(`:${port}`));
+        if (lines.length === 0) {
+            console.log(`Not found any process with ${port}.`);
+            return;
+        }
+
+        const pid = lines[0].trim().split(/\s+/).pop(); //get final PID
+
+        console.log(`Stopping ...`);
+
+        //stop PID
+        exec(`taskkill /PID ${pid} /F`, (killErr, killStdout, killStderr) => {
+            if (killErr) {
+                console.error(`Cannot stop PID ${pid}: ${killStderr}`);
+                return;
+            }
+            console.log(`Stopped successfully.`);
+        });
+    });
+}
