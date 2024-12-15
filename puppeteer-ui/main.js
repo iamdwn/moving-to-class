@@ -80,11 +80,13 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
                 browserURL: 'http://localhost:9222',
                 headless: false,
                 args: [
-                    '--remote-debugging-port=${chromePort}'
-                    // '--disable-background-timer-throttling', // Ngăn giảm tốc độ bộ đếm thời gian
-                    // '--disable-renderer-backgrounding', // Ngăn giảm hiệu suất của tab chạy nền
-                    // '--disable-backgrounding-occluded-windows', // Vẫn xử lý cửa sổ bị minimize
-                    // '--force-renderer-accessibility', // Buộc Chrome luôn hoạt động
+                    '--remote-debugging-port=${chromePort}',
+                    '--window-size=100,100', '--window-position=1920,1080',
+                    // '--use-gl=desktop',
+                    // '--disable-background-timer-throttling',
+                    // '--disable-renderer-backgrounding',
+                    // '--disable-backgrounding-occluded-windows', 
+                    // '--force-renderer-accessibility', 
                 ]
             });
 
@@ -94,18 +96,6 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
             browserInstance = browser;
 
             const page = await browser.newPage();
-
-            await page.evaluateOnNewDocument(() => {
-                Object.defineProperty(document, 'visibilityState', {
-                    get: () => 'visible',
-                });
-                Object.defineProperty(document, 'hidden', {
-                    get: () => false,
-                });
-                document.addEventListener('visibilitychange', (event) => {
-                    console.log('Visibility changed:', document.visibilityState);
-                });
-            });
 
             await page.goto('https://fap.fpt.edu.vn/Default.aspx');
 
@@ -272,7 +262,7 @@ ipcMain.on('stop-chrome', () => {
 });
 
 function stopChromeByPort(port) {
-    console.log(`Tìm và dừng Chrome trên cổng ${port}...`);
+    console.log(`Finding ${port}...\nFound Successfully.`);
     //find process with port using netstat and taskkill
     exec(`netstat -ano | findstr :${port}`, (err, stdout, stderr) => {
         if (err || !stdout) {
@@ -289,15 +279,13 @@ function stopChromeByPort(port) {
 
         const pid = lines[0].trim().split(/\s+/).pop(); //get final PID
 
-        console.log(`Stopping ...`);
-
         //stop PID
         exec(`taskkill /PID ${pid} /F`, (killErr, killStdout, killStderr) => {
             if (killErr) {
                 console.error(`Cannot stop PID ${pid}: ${killStderr}`);
                 return;
             }
-            console.log(`Stopped successfully.`);
+            console.log(`Stopping ...\nStopped successfully.`);
         });
     });
 }
