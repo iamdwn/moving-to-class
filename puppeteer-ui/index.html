@@ -159,7 +159,7 @@
                 <option value="49540">IB1706_Half 2</option>
                 <option value="49616">IB1708_Half 2</option>
             </select>
-
+            <input type="number" id="timeout" placeholder="Enter timeout in ms (ex: 1000, 1500 ..)" />
             <button id="toggle-button">Start</button>
             <div id="status" class="status"></div>
             <div id="console-output" class="status"></div>
@@ -176,6 +176,8 @@
         const subjectDropdown = document.getElementById('subject-dropdown');
         const courseCodeDropdown = document.getElementById('course-code');
         const consoleOutput = document.getElementById('console-output');
+        const timeoutInput = document.getElementById('timeout');
+
 
         let isRunning = false;
 
@@ -221,6 +223,7 @@
                 const password = passwordInput.value;
                 const subject = subjectDropdown.value;
                 const course = courseCodeDropdown.value;
+                const timeout = parseInt(timeoutInput.value, 10);
 
                 if (!course) {
                     console.error('Course code is undefined or not provided!');
@@ -241,7 +244,12 @@
                     return;
                 }
 
-                ipcRenderer.send('start-chrome', { email, password, subject, course });
+                if (isNaN(timeout) || timeout <= 0) {
+                    statusDiv.textContent = 'Please enter a valid timeout value!';
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+                ipcRenderer.send('start-chrome', { email, password, subject, course, timeout });
                 statusDiv.textContent = 'Attempting to log in ...';
                 statusDiv.style.color = 'blue';
                 toggleButton.style.backgroundColor = 'red';

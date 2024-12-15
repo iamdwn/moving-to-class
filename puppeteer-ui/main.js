@@ -55,7 +55,7 @@ ipcMain.on('get-emails', (event) => {
     event.reply('email-list', emails);
 });
 
-ipcMain.on('start-chrome', async (event, { email, password, subject, course }) => {
+ipcMain.on('start-chrome', async (event, { email, password, subject, course, timeout }) => {
     const userDataDirMap = {
         'duongtddse172132@fpt.edu.vn': 'C:\\chrome-profiles\\user1',
         'anhptnse171173@fpt.edu.vn': 'C:\\chrome-profiles\\user2',
@@ -117,10 +117,29 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
             //     await page.waitForNavigation({ waitUntil: 'networkidle0' });
             // }
 
-            await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]');
-            console.log('Redirecting ...');
-            await page.click('a[href="FrontOffice/Courses.aspx"]');
-            console.log('Redirected successfully.');
+            try {
+                await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]', { timeout: 5000 });
+                console.log('Redirecting ...');
+                await page.click('a[href="FrontOffice/Courses.aspx"]');
+                console.log('Redirected successfully.');
+                redirectSuccess = true;
+            } catch (error) {
+                console.log('Having some notìications.');
+            
+                try {
+                    await page.waitForSelector('a.btn.btn-success[href="Student.aspx"]', { timeout: 2000 });
+                    await page.click('a.btn.btn-success[href="Student.aspx"]');
+                    console.log('Home button clicked. Retrying to find "a[href=\'FrontOffice/Courses.aspx\']"...');
+            
+                    await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]', { timeout: 2000 });
+                    console.log('Redirecting ...');
+                    await page.click('a[href="FrontOffice/Courses.aspx"]');
+                    console.log('Redirected successfully.');
+                    redirectSuccess = true;
+                } catch (innerError) {
+                    console.log('Redirected failed.');
+                }
+            }
 
             console.log(`Redirecting ${subject} ...`);
 
@@ -162,7 +181,7 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course }) =
 
                     await dialog.accept();
 
-                    await new Promise(resolve => setTimeout(resolve, 1500)); 
+                    await new Promise(resolve => setTimeout(resolve, timeout)); 
                     
                     const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
                     if (saveButton) {
