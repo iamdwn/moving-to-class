@@ -18,7 +18,25 @@ let chromePort = 9222;
 //     }
 // });
 
-app.on('ready', () => {
+let loginWindow;
+let userData;
+
+function createLoginWindow() {
+    loginWindow = new BrowserWindow({
+        width: 550,
+        height: 900,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+        resizable: false,
+    });
+
+    loginWindow.loadFile('login.html');
+}
+
+function createCourseWindow(data) {
     mainWindow = new BrowserWindow({
         width: 550,
         height: 900,
@@ -31,20 +49,25 @@ app.on('ready', () => {
     });
 
     mainWindow.loadFile('index.html');
+    mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow.webContents.send('init-data', data);
+    });
+}
 
+app.whenReady().then(createLoginWindow);
+
+ipcMain.on('login-success', (event, data) => {
+    if (loginWindow) loginWindow.close();
+
+    createCourseWindow(data);
+});
+
+app.on('ready', () => {
     const log = console.log;
     console.log = (...args) => {
         log(...args);
         mainWindow.webContents.send('console-log', args.join(' '), isCleared);
     };
-
-    mainWindow.on('closed', () => {
-        if (chromeProcess) {
-            chromeProcess.kill();
-            chromeProcess = null;
-        }
-        app.quit();
-    });
 });
 
 ipcMain.on('get-emails', (event) => {
@@ -89,10 +112,6 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
                     // '--force-renderer-accessibility', 
                 ]
             });
-
-            // const pages = await browser.pages();
-            // const page = pages[0];
-
             browserInstance = browser;
 
             const page = await browser.newPage();
@@ -136,12 +155,11 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
                 console.log('Redirected successfully.');
                 redirectSuccess = true;
             } catch (error) {
-                console.log('Having some notìications.');
+                console.log('Having some notifications.');
             
                 try {
                     await page.waitForSelector('a.btn.btn-success[href="Student.aspx"]', { timeout: 2000 });
                     await page.click('a.btn.btn-success[href="Student.aspx"]');
-                    console.log('Home button clicked. Retrying to find "a[href=\'FrontOffice/Courses.aspx\']"...');
             
                     await page.waitForSelector('a[href="FrontOffice/Courses.aspx"]', { timeout: 2000 });
                     console.log('Redirecting ...');
@@ -185,27 +203,24 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
             page.on('dialog', async (dialog) => {
                 const message = dialog.message();
                 isCleared = true;
-                console.log(`Alert: ${message}` + `\nFailed. Retrying ...` + `\nCount: ${count}`);
 
                 if (message.includes('Bạn không thể chuyển tới lớp này')) {
-                    // console.log('Failed. Retrying ...');
-                    // console.log(`Count: ${count}`);
-
+                    console.log(`Alert: ${message}` + `\nFailed. Retrying ...` + `\nCount: ${count}`);
                     await dialog.accept();
 
                     await new Promise(resolve => setTimeout(resolve, timeout)); 
                     
                     const saveButton = await page.$('input[type="submit"][name="ctl00$mainContent$btSave"]');
                     if (saveButton) {
-                        // console.log("Retrying ...");
                         await saveButton.click();
                     } else {
                         console.error("Save button not found!");
                     }
                     count++;                  
                 } else {
-                    console.log('No failure. Accepting alert.');
+                    console.log('Moving successfully.');
                     await dialog.accept();
+                    stopChromeByPort(chromePort, true);
                 }
             });
 
@@ -216,31 +231,6 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
             } else {
                 console.error("Save button not found!");
             }
-
-            // await page.waitForSelector('table#ctl00_mainContent_gvCourses');
-
-            // const rows = await page.$$('#ctl00_mainContent_gvCourses tr');
-
-            // console.log('Redirecting ...');
-
-            // for (let row of rows) {
-            //     const subjectCodeCell = await row.$('td:first-child');
-            //     if (subjectCodeCell) {
-            //         const subjectCodeText = await page.evaluate(el => el.innerText.trim(), subjectCodeCell);
-            //         if (subjectCodeText === subjectCode) { 
-            //             console.log(`Found subject code ${subjectCode}.`);
-
-            //             const moveClassLink = await row.$('a#ctl00_mainContent_gvCourses_ctl02_lkMoveGroup');
-            //             if (moveClassLink) {
-            //                 await moveClassLink.click();
-            //                 console.log('Redirected.');
-            //                 break;
-            //             }
-            //         } else {
-            //             console.log(`Not found subject code ${subjectCode}.`);
-            //         }
-            //     }
-            // }
         } catch (error) {
             console.error('Error during automation:', error.message);
         }
@@ -261,8 +251,9 @@ ipcMain.on('stop-chrome', () => {
     stopChromeByPort(chromePort);
 });
 
-function stopChromeByPort(port) {
-    console.log(`Finding ${port}...\nFound Successfully.`);
+function stopChromeByPort(port, isSuccess = false) {
+    if (!isSuccess)
+        console.log(`Finding ${port}...\nFound successfully.`);
     //find process with port using netstat and taskkill
     exec(`netstat -ano | findstr :${port}`, (err, stdout, stderr) => {
         if (err || !stdout) {
@@ -285,7 +276,8 @@ function stopChromeByPort(port) {
                 console.error(`Cannot stop PID ${pid}: ${killStderr}`);
                 return;
             }
-            console.log(`Stopping ...\nStopped successfully.`);
+            if (!isSuccess)
+                console.log(`Stopping ...\nStopped successfully.`);
         });
     });
 }

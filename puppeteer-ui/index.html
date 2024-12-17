@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving to class by Dozun v0.9.2</title>
+    <title>Moving to class by Dozun v0.9.3</title>
     <style>
         * {
             box-sizing: border-box;
@@ -103,12 +103,9 @@
 <body>
     <div class="phone-frame">
         <div class="form-container">
-            <h1>Moving to class by Dozun v0.9.2</h1>
-            <select id="email">
-                <option value="" disabled selected>Choose your email</option>
-            </select>
+            <h1>Moving to class by Dozun v0.9.3</h1>
 
-            <input type="password" id="password" placeholder="Enter your password" />
+            <p>Email: <span id="email-display"></span></p>
 
             <select id="subject-dropdown">
                 <option value="" disabled selected>Select Subject</option>
@@ -170,47 +167,22 @@
         const { ipcRenderer } = require('electron');
 
         const toggleButton = document.getElementById('toggle-button');
-        const emailSelect = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
         const statusDiv = document.getElementById('status');
         const subjectDropdown = document.getElementById('subject-dropdown');
         const courseCodeDropdown = document.getElementById('course-code');
         const consoleOutput = document.getElementById('console-output');
         const timeoutInput = document.getElementById('timeout');
 
-
         let isRunning = false;
+        let emailSelect = null;
+        let passwordInput = null;
 
-        const userProfileMap = {
-            'duongtddse172132@fpt.edu.vn': 'C:\\chrome-profiles\\user1',
-            'anhptnse171173@fpt.edu.vn': 'C:\\chrome-profiles\\user2',
-        };
-
-        ipcRenderer.send('get-emails');
-        ipcRenderer.on('email-list', (event, emails) => {
-            emails.forEach(email => {
-                const option = document.createElement('option');
-                option.value = email;
-                option.textContent = email;
-                emailSelect.appendChild(option);
-            });
-        });
-
-        emailSelect.addEventListener('change', () => {
-            const selectedEmail = emailSelect.value;
-            
-            if (userProfileMap[selectedEmail]) {
-                passwordInput.style.display = 'none';
-            } else {
-                passwordInput.style.display = 'block';
-            }
-        });
-
-        if (!emailSelect.value) {
-            passwordInput.style.display = 'block';
-        }
-
-        toggleButton.addEventListener('click', () => {
+        ipcRenderer.on('init-data', (event, data) => {
+            document.getElementById('email-display').innerText = data.email;
+            window.userData = data;
+            emailSelect = data.email;
+            passwordInput = data.password;
+            toggleButton.addEventListener('click', () => {
             if (isRunning) {
                 ipcRenderer.send('stop-chrome');
                 statusDiv.textContent = 'Program is stopped.';
@@ -219,8 +191,8 @@
                 toggleButton.textContent = 'Start';
                 isRunning = false;
             } else {
-                const email = emailSelect.value;
-                const password = passwordInput.value;
+                const email = emailSelect;
+                const password = passwordInput;
                 const subject = subjectDropdown.value;
                 const course = courseCodeDropdown.value;
                 const timeout = parseInt(timeoutInput.value, 10);
@@ -231,15 +203,7 @@
                 }
 
                 if (!email || !subject) {
-                    console.log(statusDiv);
-                    statusDiv.textContent = 'Please select email and enter subject code!';
-                    statusDiv.style.color = 'red';
-                    console.log(statusDiv);
-                    return;
-                }
-
-                if (passwordInput.style.display === 'block' && !password) {
-                    statusDiv.textContent = 'Please enter your password!';
+                    statusDiv.textContent = `Please select email and enter subject code! ${emailSelect}`;
                     statusDiv.style.color = 'red';
                     return;
                 }
@@ -266,6 +230,7 @@
             consoleOutput.innerHTML += `<pre>${message}</pre>`;
             
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        });
         });
     </script>
 </body>
