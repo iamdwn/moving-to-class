@@ -218,7 +218,7 @@ ipcMain.on('start-chrome', async (event, { email, password, subject, course, tim
                     }
                     count++;                  
                 } else {
-                    console.log('Moving successfully.');
+                    console.log('Moving ...\nMoving successfully.');
                     await dialog.accept();
                     stopChromeByPort(chromePort, true);
                 }

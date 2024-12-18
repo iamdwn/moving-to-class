@@ -114,47 +114,8 @@
                 <option value="VNR202 - History of Vietnam Communist Party">VNR202 - History of Vietnam Communist Party</option>
             </select>
 
-            <select id="course-code" required>
+            <select id="course-code">
                 <option value="" selected disabled>Select Course</option>
-                <option value="48337">NET1712_Half 1</option>
-                <option value="48341">NET1714_Half 1</option>
-                <option value="48346">NET1725_Half 1</option>
-                <option value="48348">NET1713_Half 1</option>
-                <option value="48353">NET1716_Half 1</option>
-                <option value="48359">NET1715_Half 1</option>
-                <option value="48361">NET1726_Half 1</option>
-                <option value="48757">MKT1711_Half 1</option>
-                <option value="48784">MKT1709_Half 2</option>
-                <option value="48796">GD1712_Half 1</option>
-                <option value="48799">IB1709_Half 2</option>
-                <option value="48803">GD1711_Half 1</option>
-                <option value="48810">IB1705_Half 1</option>
-                <option value="48819">GD1713_Half 1</option>
-                <option value="48860">NJS1712_Half 2</option>
-                <option value="48884">NJS1711_Half 1</option>
-                <option value="49058">AI1706_Half 1</option>
-                <option value="49067">MC1710_Half 1</option>
-                <option value="49076">AI1705_Half 1</option>
-                <option value="49079">MC1709_Half 1</option>
-                <option value="49104">MC1708_Half 1</option>
-                <option value="49116">MC1712_Half 2</option>
-                <option value="49131">IA1705_Half 2</option>
-                <option value="49147">IA1704_Half 1</option>
-                <option value="49240">NET1723_Half 2</option>
-                <option value="49251">NET1724_Half 1</option>
-                <option value="49253">NET1727_Half 2</option>
-                <option value="49288">MKT1708_Half 2</option>
-                <option value="49347">GD1714_Half 2</option>
-                <option value="49354">GD1717_Half 2</option>
-                <option value="49360">SAP1706_Half 2</option>
-                <option value="49408">NJS1710_Half 2</option>
-                <option value="49430">NJS1709_Half 2</option>
-                <option value="49438">NJS1714_Half 2</option>
-                <option value="49476">MC1707_Half 2</option>
-                <option value="49517">EL1703_Half 2</option>
-                <option value="49533">MKT1707_Half 2</option>
-                <option value="49540">IB1706_Half 2</option>
-                <option value="49616">IB1708_Half 2</option>
             </select>
             <input type="number" id="timeout" placeholder="Enter timeout in ms (ex: 1000, 1500 ..)" />
             <button id="toggle-button">Start</button>
@@ -165,13 +126,14 @@
 
     <script>
         const { ipcRenderer } = require('electron');
-
         const toggleButton = document.getElementById('toggle-button');
         const statusDiv = document.getElementById('status');
         const subjectDropdown = document.getElementById('subject-dropdown');
         const courseCodeDropdown = document.getElementById('course-code');
         const consoleOutput = document.getElementById('console-output');
         const timeoutInput = document.getElementById('timeout');
+        const CourseManager = require('./course');
+        const courseManager = new CourseManager();
 
         let isRunning = false;
         let emailSelect = null;
@@ -231,6 +193,24 @@
             
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
         });
+        });
+
+        function updateCourseDropdown(subjectCode) {
+            courseCodeDropdown.innerHTML = '<option value="" selected disabled>Select Course</option>';
+
+            const courses = courseManager.getCourses(subjectCode);
+
+            courses.forEach(course => {
+                const option = document.createElement("option");
+                option.value = course.value;
+                option.textContent = course.text;
+                courseCodeDropdown.appendChild(option);
+            });
+        }
+
+        subjectDropdown.addEventListener("change", () => {
+            const selectedSubject = subjectDropdown.value;
+            updateCourseDropdown(selectedSubject);
         });
     </script>
 </body>
