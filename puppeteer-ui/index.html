@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving to class by Dozun v0.9.3</title>
+    <title>Moving to class by Dozun v0.9.4</title>
     <style>
         * {
             box-sizing: border-box;
@@ -103,7 +103,7 @@
 <body>
     <div class="phone-frame">
         <div class="form-container">
-            <h1>Moving to class by Dozun v0.9.3</h1>
+            <h1>Moving to class by Dozun v0.9.4</h1>
 
             <p>Email: <span id="email-display"></span></p>
 
@@ -185,7 +185,7 @@
         });
 
         ipcRenderer.on('console-log', (event, message, isCleared) => {
-            if (isCleared === true){
+            if (isCleared === true){    
                 consoleOutput.innerHTML = ''; 
             }
 
