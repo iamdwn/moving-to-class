@@ -3,7 +3,7 @@
 - Clone về theo đường dẫn:
 
 ```bash
-https://github.com/iamdwn/move-to-class-tool.git
+git clone https://github.com/iamdwn/moving-to-class.git
 ```
 
 # II. Cài thư viện:
@@ -47,4 +47,5 @@ node autosave.js
 - Vào folder `app-installation`
 - Unzip folder `Moving To Class by Dozun vX.X.X`
 - Run installation
+
 
