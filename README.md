@@ -3,7 +3,7 @@
 - Clone về theo đường dẫn:
 
 ```bash
-git clone https://github.com/iamdwn/moving-to-class.git
+git clone https://github.com/iamdwn/fptu-slot-hunter.git
 ```
 
 # II. Cài thư viện:
